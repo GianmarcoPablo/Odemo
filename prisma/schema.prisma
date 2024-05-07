@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// DATABASE DESING FOR A COURSES SALES PLATFORM
+
+enum Role {
+  user
+  admin
+}
+
+// USERS
+model User {
+  id         String       @id @default(uuid())
+  email      String       @unique
+  password   String
+  name       String
+  lastname   String
+  role       Role         @default(user)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  // RELATIONSHIPS
+  courses    Course[]
+  Enrollment Enrollment[]
+  coupon     Coupon[]
+}
+
+model Coupon {
+  id         String       @id @default(uuid())
+  code       String
+  discount   Float
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Course     Course[] // un cupon puede ser usado en varios cursos
+  Enrollment Enrollment[]
+  User       User         @relation(fields: [userId], references: [id])
+  userId     String
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // RELATIONSHIPS
+  courses   Course[]
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  price       Float        @default(0)
+  tags        String[]
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  // RELATIONSHIPS
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  lessons     Lesson[]
+  Enrollment  Enrollment[]
+  coupon      Coupon       @relation(fields: [couponId], references: [id])
+  couponId    String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  categoryId  String
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  videoUrl    String
+  duration    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // RELATIONSHIPS
+  course      Course   @relation(fields: [courseId], references: [id])
+  courseId    String
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // RELATIONSHIPS
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id])
+  couponId  String
+}
